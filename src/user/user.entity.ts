@@ -31,7 +31,7 @@ export class UserEntity {
     const responseObject: UserRO = {
       id,
       created,
-      username,
+      username
     };
 
     if (showToken) {
@@ -47,10 +47,10 @@ export class UserEntity {
     return jwt.sign(
       {
         id,
-        username,
+        username
       },
       process.env.SECRET,
-      { expiresIn: '7d' },
+      { expiresIn: "7d" }
     );
   }
 }

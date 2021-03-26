@@ -17,7 +17,7 @@ export class UserService {
     return users.map(users => users.toResponseObject(false));
   }
 
-  async register(data: UserDto) {
+  async register(data: UserDto): Promise<UserRO> {
     const { username } = data;
     let user = await this.userRepository.findOne({ where: { username } });
     if (user) {
@@ -28,7 +28,7 @@ export class UserService {
     return user.toResponseObject();
   }
 
-  async login(data: UserDto) {
+  async login(data: UserDto): Promise<UserRO> {
     const { username, password } = data;
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user || !(await user.comparePassword(password))) {
