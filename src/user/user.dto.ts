@@ -9,10 +9,11 @@ export class UserDto {
   password: string;
 }
 
-export class UserRO{
+export class UserRO {
   id: string;
   username: string;
   created: Date;
   token?: string;
   ideas?: IdeaEntity[];
+  bookmarks?: IdeaEntity[];
 }

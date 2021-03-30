@@ -8,26 +8,38 @@ import {
 
 @Catch()
 export class HttpErrorFillter implements ExceptionFilter {
-  private error: Boolean;
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const request = ctx.getRequest();
     const response = ctx.getResponse();
-    const status = (this.error instanceof HttpException) ? this.error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+    const request = ctx.getRequest();
+    const status = exception.getStatus
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const errorResponse = {
       code: status,
       timeStamp: new Date().toLocaleDateString(),
       path: request.url,
       method: request.message,
-      message: exception.message,
+      message:
+        status !== HttpStatus.INTERNAL_SERVER_ERROR
+          ? exception.message || null : 'Internal server error',
+
     };
 
-    Logger.error(
-      `${request.method} ${request.url}`,
-      JSON.stringify(errorResponse),
-      'ExceptionFillter',
-    );
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      Logger.error(
+        `${request.method} ${request.url}`,
+        exception.stack,
+        'ExceptionFilter',
+      );
+    } else {
+      Logger.error(
+        `${request.method} ${request.url}`,
+        JSON.stringify(errorResponse),
+        'ExceptionFilter',
+      );
+    }
 
     response.status(status).json(errorResponse);
   }
