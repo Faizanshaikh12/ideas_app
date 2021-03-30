@@ -13,15 +13,15 @@ export class UserService {
   }
 
   async getAll(): Promise<UserRO[]> {
-    const users = await this.userRepository.find();
-    return users.map(users => users.toResponseObject(false));
+    const users = await this.userRepository.find({ relations: ["ideas"] });
+    return users.map(user => user.toResponseObject(false));
   }
 
   async register(data: UserDto): Promise<UserRO> {
     const { username } = data;
     let user = await this.userRepository.findOne({ where: { username } });
     if (user) {
-      throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      throw new HttpException("User already exists", HttpStatus.BAD_REQUEST);
     }
     user = await this.userRepository.create(data);
     await this.userRepository.save(user);
@@ -33,8 +33,8 @@ export class UserService {
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user || !(await user.comparePassword(password))) {
       throw new HttpException(
-        'Invalid username/password',
-        HttpStatus.BAD_REQUEST,
+        "Invalid username/password",
+        HttpStatus.BAD_REQUEST
       );
     }
     return user.toResponseObject();

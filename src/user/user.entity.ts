@@ -1,21 +1,32 @@
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
-import * as bcrypt from "bcrypt";
-import * as jwt from "jsonwebtoken";
-import { UserRO } from "./user.dto";
+import {
+  BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
+import { UserRO } from './user.dto';
+import { IdeaEntity } from '../idea/idea.entity';
 
-@Entity("user")
+@Entity('user')
 export class UserEntity {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @CreateDateColumn()
   created: Date;
 
-  @Column({ type: "text", unique: true })
+  @Column({ type: 'text', unique: true })
   username: string;
 
-  @Column("text")
+  @Column('text')
   password: string;
+
+  @OneToMany(type => IdeaEntity, idea => idea.author)
+  ideas: IdeaEntity[];
 
   @BeforeInsert()
   async hashPassword() {
@@ -31,11 +42,14 @@ export class UserEntity {
     const responseObject: UserRO = {
       id,
       created,
-      username
+      username,
     };
 
     if (showToken) {
       responseObject.token = token;
+    }
+    if(this.ideas){
+      responseObject.ideas = this.ideas;
     }
 
     return responseObject;
@@ -47,10 +61,10 @@ export class UserEntity {
     return jwt.sign(
       {
         id,
-        username
+        username,
       },
       process.env.SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' },
     );
   }
 }
