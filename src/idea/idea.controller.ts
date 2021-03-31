@@ -6,10 +6,10 @@ import {
   Logger,
   Param,
   Post,
-  Put,
+  Put, Query,
   UseGuards,
-  UsePipes
-} from "@nestjs/common";
+  UsePipes,
+} from '@nestjs/common';
 import { IdeaService } from "./idea.service";
 import { IdeaDto } from "./idea.dto";
 import { ValidationPipe } from "../shared/validation.pipe";
@@ -31,8 +31,13 @@ export class IdeaController {
   }
 
   @Get()
-  getAllIdea() {
-    return this.ideaService.getAll();
+  getAllIdea(@Query('page') page: number) {
+    return this.ideaService.getAll(page);
+  }
+
+  @Get('/newest')
+  getNewestIdea(@Query('page') page: number){
+    return this.ideaService.getAll(page, true);
   }
 
   @Post()

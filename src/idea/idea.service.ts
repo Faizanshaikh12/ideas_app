@@ -1,10 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { Repository } from "typeorm";
-import { IdeaEntity } from "./idea.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { IdeaDto, IdeaRO } from "./idea.dto";
-import { UserEntity } from "../user/user.entity";
-import { Votes } from "../shared/votes.enum";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { IdeaEntity } from './idea.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IdeaDto, IdeaRO } from './idea.dto';
+import { UserEntity } from '../user/user.entity';
+import { Votes } from '../shared/votes.enum';
 
 @Injectable()
 export class IdeaService {
@@ -12,7 +12,7 @@ export class IdeaService {
     @InjectRepository(IdeaEntity)
     private ideaRepository: Repository<IdeaEntity>,
     @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>
+    private userRepository: Repository<UserEntity>,
   ) {
   }
 
@@ -29,7 +29,7 @@ export class IdeaService {
 
   private ensureOwnership(idea: IdeaEntity, userId: string) {
     if (idea.author.id !== userId) {
-      throw new HttpException("Incorrect user", HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Incorrect user', HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -52,8 +52,13 @@ export class IdeaService {
     return idea;
   }
 
-  async getAll(): Promise<IdeaRO[]> {
-    const ideas = await this.ideaRepository.find({ relations: ["author", "upvotes", "downvotes", "comments"] });
+  async getAll(page: number = 1, newest?: boolean): Promise<IdeaRO[]> {
+    const ideas = await this.ideaRepository.find({
+      relations: ['author', 'upvotes', 'downvotes', 'comments'],
+      take: 25,
+      skip: 25 * (page - 1),
+      order: newest && { created: 'DESC' },
+    });
     return ideas.map(idea => this.toResponseObject(idea));
   }
 
@@ -65,28 +70,37 @@ export class IdeaService {
   }
 
   async read(id: string): Promise<IdeaRO> {
-    const idea = await this.ideaRepository.findOne({ where: { id }, relations: ["author", "upvotes", "downvotes", "comments"] });
+    const idea = await this.ideaRepository.findOne({
+      where: { id },
+      relations: ['author', 'upvotes', 'downvotes', 'comments'],
+    });
     if (!idea) {
-      throw new HttpException("Not Found", HttpStatus.NOT_FOUND);
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
     return this.toResponseObject(idea);
   }
 
   async update(id: string, userId: string, data: Partial<IdeaDto>): Promise<IdeaRO> {
-    let idea = await this.ideaRepository.findOne({ where: { id }, relations: ["author", "upvotes", "downvotes", "comments"] });
+    let idea = await this.ideaRepository.findOne({
+      where: { id },
+      relations: ['author', 'upvotes', 'downvotes', 'comments'],
+    });
     if (!idea) {
-      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
     this.ensureOwnership(idea, userId);
     await this.ideaRepository.update({ id }, data);
-    idea = await this.ideaRepository.findOne({ where: { id }, relations: ["author", "upvotes", "downvotes", "comments"] });
+    idea = await this.ideaRepository.findOne({
+      where: { id },
+      relations: ['author', 'upvotes', 'downvotes', 'comments'],
+    });
     return this.toResponseObject(idea);
   }
 
   async delete(id: string, userId: string) {
-    const idea = await this.ideaRepository.findOne({ where: { id }, relations: ["author"] });
+    const idea = await this.ideaRepository.findOne({ where: { id }, relations: ['author'] });
     if (!idea) {
-      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
     this.ensureOwnership(idea, userId);
     await this.ideaRepository.delete({ id });
@@ -96,7 +110,7 @@ export class IdeaService {
   async upvote(id: string, userId: string) {
     let idea = await this.ideaRepository.findOne({
       where: { id },
-      relations: ["author", "upvotes", "downvotes", "comments"]
+      relations: ['author', 'upvotes', 'downvotes', 'comments'],
     });
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
@@ -107,7 +121,7 @@ export class IdeaService {
   async downvote(id: string, userId: string) {
     let idea = await this.ideaRepository.findOne({
       where: { id },
-      relations: ["author", "upvotes", "downvotes", "comments"]
+      relations: ['author', 'upvotes', 'downvotes', 'comments'],
     });
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
@@ -119,7 +133,7 @@ export class IdeaService {
     const idea = await this.ideaRepository.findOne({ where: { id } });
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ["bookmarks"]
+      relations: ['bookmarks'],
     });
 
     if (user.bookmarks.filter(bookmark => bookmark.id === idea.id).length < 1) {
@@ -127,8 +141,8 @@ export class IdeaService {
       await this.userRepository.save(user);
     } else {
       throw new HttpException(
-        "Idea already bookmarked ",
-        HttpStatus.BAD_REQUEST
+        'Idea already bookmarked ',
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -139,16 +153,16 @@ export class IdeaService {
     const idea = await this.ideaRepository.findOne({ where: { id } });
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ["bookmarks"]
+      relations: ['bookmarks'],
     });
 
     if (user.bookmarks.filter(bookmark => bookmark.id === idea.id).length > 0) {
       user.bookmarks = user.bookmarks.filter(
-        bookmark => bookmark.id !== idea.id
+        bookmark => bookmark.id !== idea.id,
       );
       await this.userRepository.save(user);
     } else {
-      throw new HttpException("Cannot remove bookmark", HttpStatus.BAD_REQUEST);
+      throw new HttpException('Cannot remove bookmark', HttpStatus.BAD_REQUEST);
     }
 
     return user.toResponseObject(false);

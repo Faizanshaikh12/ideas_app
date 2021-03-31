@@ -1,10 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { CommentEntity } from "./comment.entity";
-import { Repository } from "typeorm";
-import { IdeaEntity } from "../idea/idea.entity";
-import { UserEntity } from "../user/user.entity";
-import { CommentDto } from "./comment.dto";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CommentEntity } from './comment.entity';
+import { Repository } from 'typeorm';
+import { IdeaEntity } from '../idea/idea.entity';
+import { UserEntity } from '../user/user.entity';
+import { CommentDto } from './comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -14,29 +14,33 @@ export class CommentService {
     @InjectRepository(IdeaEntity)
     private ideaRepository: Repository<IdeaEntity>,
     @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>
+    private userRepository: Repository<UserEntity>,
   ) {
   }
 
   private toResponseObject(comment: CommentEntity) {
     return {
       ...comment,
-      author: comment.author && comment.author.toResponseObject()
+      author: comment.author && comment.author.toResponseObject(),
     };
   }
 
-  async showByIdea(id: string) {
-    const comments = await this.ideaRepository.findOne({
-      where: { id },
-      relations: ["comments", "comments.author", "comments.idea"]
+  async showByIdea(ideaId: string, page: number = 1) {
+    const comments = await this.commentRepository.find({
+      where: { idea: { id: ideaId } },
+      relations: ['author', 'idea'],
+      take: 25,
+      skip: 25 * (page - 1),
     });
     return comments.map(comment => this.toResponseObject(comment));
   }
 
-  async showByUser(id: string) {
+  async showByUser(userId: string, page: number = 1) {
     const comments = await this.commentRepository.find({
-      where: { id },
-      relations: ["author"]
+      where: { author: { id: userId } },
+      relations: ['author', 'idea'],
+      take: 25,
+      skip: 25 * (page - 1),
     });
     return comments.map(comment => this.toResponseObject(comment));
   }
@@ -44,7 +48,7 @@ export class CommentService {
   async show(id: string) {
     const comment = await this.commentRepository.findOne({
       where: { id },
-      relations: ["author", "idea"]
+      relations: ['author', 'idea'],
     });
     return this.toResponseObject(comment);
   }
@@ -54,7 +58,7 @@ export class CommentService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     const comment = await this.commentRepository.create({
-      ...data, idea, author: user
+      ...data, idea, author: user,
     });
     await this.commentRepository.save(comment);
     return this.toResponseObject(comment);

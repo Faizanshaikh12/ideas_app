@@ -2,7 +2,7 @@ import {
   Body,
   Controller,
   Get,
-  Post,
+  Post, Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -15,8 +15,8 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('api/users')
-  getAllUsers() {
-    return this.userService.getAll();
+  getAllUsers(@Query('page') page: number) {
+    return this.userService.getAll(page);
   }
 
   @Post('register')

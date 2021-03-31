@@ -5,35 +5,35 @@ import {
   Get,
   Logger,
   Param,
-  Post,
+  Post, Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
-} from "@nestjs/common";
-import { CommentService } from "./comment.service";
-import { User } from "../user/user.decor";
-import { CommentDto } from "./comment.dto";
-import { AuthGuard } from "../shared/auth.guards";
+} from '@nestjs/common';
+import { CommentService } from './comment.service';
+import { User } from '../user/user.decor';
+import { CommentDto } from './comment.dto';
+import { AuthGuard } from '../shared/auth.guards';
 
 @Controller('api/comments')
 export class CommentController {
   constructor(private commentService: CommentService) {
   }
 
-  @Get(":id")
-  showComment(@Param("id") id: string) {
+  @Get(':id')
+  showComment(@Param('id') id: string) {
     return this.commentService.show(id);
   }
 
-  @Get("idea/:id")
-  showCommentByIdea(@Param("id") idea: string) {
-    return this.commentService.showByIdea(idea);
+  @Get('idea/:id')
+  showCommentByIdea(@Param('id') idea: string, @Query('page') page: number) {
+    return this.commentService.showByIdea(idea, page);
   }
 
 
-  @Get("user/:id")
-  showCommentByUser(@Param("id") user: string) {
-    return this.commentService.showByUser(user);
+  @Get('user/:id')
+  showCommentByUser(@Param('id') user: string, @Query('page') page: number) {
+    return this.commentService.showByUser(user, page);
   }
 
   @Post('idea/:id')
