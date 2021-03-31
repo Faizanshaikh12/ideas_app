@@ -7,9 +7,10 @@ import { IdeaModule } from './idea/idea.module';
 import { HttpErrorFillter } from './shared/http-error.fillter';
 import { LoggingInterceptor } from "./shared/logging.interceptor";
 import { UserModule } from './user/user.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), IdeaModule, UserModule],
+  imports: [TypeOrmModule.forRoot(), IdeaModule, UserModule, CommentModule],
   controllers: [AppController],
   providers: [
     AppService,
